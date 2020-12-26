@@ -4,8 +4,10 @@ using UnityEngine;
 
 public enum EventEnum
 {
-    //当玩家触碰到机器人的时候
-    WhenTouchRebot,
+    //当机器人跟随主角
+    WhenRobotFollowPlayer,
+    //判断主角是否可控制
+    PlayerCanBeControled,
     //当玩家消耗精力值的时候
     WhenPlayerConsumeEnergy,
 }

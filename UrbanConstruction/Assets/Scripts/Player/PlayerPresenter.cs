@@ -4,6 +4,19 @@ using UnityEngine;
 
 public class PlayerPresenter : PresenterBase<PlayerView, PlayerModel>
 {
+    //向上
+    private bool isUp;
+    //向下
+    private bool isDown;
+    //向左
+    private bool isLeft;
+    //向右
+    private bool isRight;
+    /// <summary>
+    /// 判断是否可控制行走
+    /// </summary>
+    private bool canBeControled = false;
+
     protected override void OnAwake()
     {
         base.OnAwake();//这个必须得保留
@@ -12,16 +25,19 @@ public class PlayerPresenter : PresenterBase<PlayerView, PlayerModel>
     protected override void OnStart()
     {
         EventManager.Instance.AddEvent(EventEnum.WhenPlayerConsumeEnergy, view.SetEneryImageValue);
+        EventManager.Instance.AddEvent(EventEnum.PlayerCanBeControled, MonitorCanBeControled);
     }
 
     protected void OnEnable()
     {
         EventManager.Instance.AddEvent(EventEnum.WhenPlayerConsumeEnergy, view.SetEneryImageValue);
+        EventManager.Instance.AddEvent(EventEnum.PlayerCanBeControled, MonitorCanBeControled);
     }
 
     protected void OnDisable()
     {
         EventManager.Instance.RemoveEvent(EventEnum.WhenPlayerConsumeEnergy, view.SetEneryImageValue);
+        EventManager.Instance.RemoveEvent(EventEnum.PlayerCanBeControled, MonitorCanBeControled);
     }
 
     /// <summary>
@@ -29,122 +45,138 @@ public class PlayerPresenter : PresenterBase<PlayerView, PlayerModel>
     /// </summary>
     protected override void OnUpdate()
     {
-        SetPlayerWalk();
-        SetWASDControlPlayerDirection();
-        SetDirectionKeyControlPlayerDirection();
+        if (canBeControled)
+        {
+            SetPlayerWalk();
+            MonitorKeyDownOrUp();
+            SetControlPlayerDirection();
+        }
     }
-
-
 
     /// <summary>
     /// 控制玩家走路
     /// </summary>
     private void SetPlayerWalk()
     {
+        if (isLeft && isRight)//左右按键，停下来
+        {
+            view.SetPlayerDirection(DirectionEnum.IDLE);
+            return;
+        }
+        if (isUp && isDown)//上下按键，停下来
+        {
+            view.SetPlayerDirection(DirectionEnum.IDLE);
+            return;
+        }
         Vector2 walkVector = new Vector2(Input.GetAxis("Horizontal") * model.WalkSpeed, Input.GetAxis("Vertical") * model.WalkSpeed);
         view.PlayerRigidbody.AddForce(walkVector);
+    }
+
+    /// <summary>
+    /// 监控按键触发
+    /// </summary>
+    private void MonitorKeyDownOrUp()
+    {
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            isUp = true;
+        }
+        if (Input.GetKeyUp(KeyCode.W))
+        {
+            isUp = false;
+        }
+
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            isLeft = true;
+        }
+        if (Input.GetKeyUp(KeyCode.A))
+        {
+            isLeft = false;
+        }
+
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            isDown = true;
+        }
+        if (Input.GetKeyUp(KeyCode.S))
+        {
+            isDown = false;
+        }
+
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            isRight = true;
+        }
+        if (Input.GetKeyUp(KeyCode.D))
+        {
+            isRight = false;
+        }
     }
 
     /// <summary>
     /// 控制玩家方向
     /// 键盘上的WASD键
     /// </summary>
-    private void SetWASDControlPlayerDirection()
+    private void SetControlPlayerDirection()
     {
-        //检测四个斜向的按键
-        if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
+        if (!isLeft && !isRight && !isUp && !isDown)//没有任何按键停下来
         {
-            SetPlayerZRotation(-45);
-            view.SetPlayerDirection(PlayerDirectionEnum.UP);
+            view.SetPlayerDirection(DirectionEnum.IDLE);
+            return;
         }
-        else if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
+        if (isLeft && isRight)//左右按键，停下来
+        {
+            view.SetPlayerDirection(DirectionEnum.IDLE);
+            return;
+        }
+        if (isUp && isDown)//上下按键，停下来
+        {
+            view.SetPlayerDirection(DirectionEnum.IDLE);
+            return;
+        }
+        //检测四个斜向的按键
+        if (isUp && isLeft)
         {
             SetPlayerZRotation(45);
-            view.SetPlayerDirection(PlayerDirectionEnum.UP);
+            view.SetPlayerDirection(DirectionEnum.UP);
         }
-        else if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
+        else if (isUp && isRight)
         {
-            SetPlayerZRotation(-135);
-            view.SetPlayerDirection(PlayerDirectionEnum.DOWN);
+            SetPlayerZRotation(-45);
+            view.SetPlayerDirection(DirectionEnum.UP);
         }
-        else if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
+        else if (isDown && isLeft)
         {
-            SetPlayerZRotation(135);
-            view.SetPlayerDirection(PlayerDirectionEnum.DOWN);
+            SetPlayerZRotation(-45);
+            view.SetPlayerDirection(DirectionEnum.DOWN);
+        }
+        else if (isDown && isRight)
+        {
+            SetPlayerZRotation(45);
+            view.SetPlayerDirection(DirectionEnum.DOWN);
         }
         else
         {
-            if (Input.GetKeyDown(KeyCode.W))
+            if (isUp)
             {
                 SetPlayerZRotation(0);
-                view.SetPlayerDirection(PlayerDirectionEnum.UP);
+                view.SetPlayerDirection(DirectionEnum.UP);
             }
-            if (Input.GetKeyDown(KeyCode.A))
+            if (isLeft)
             {
                 SetPlayerZRotation(0);
-                view.SetPlayerDirection(PlayerDirectionEnum.LEFT);
+                view.SetPlayerDirection(DirectionEnum.LEFT);
             }
-            if (Input.GetKeyDown(KeyCode.S))
+            if (isDown)
             {
                 SetPlayerZRotation(0);
-                view.SetPlayerDirection(PlayerDirectionEnum.DOWN);
+                view.SetPlayerDirection(DirectionEnum.DOWN);
             }
-            if (Input.GetKeyDown(KeyCode.D))
+            if (isRight)
             {
                 SetPlayerZRotation(0);
-                view.SetPlayerDirection(PlayerDirectionEnum.RIGHT);
-            }
-        }
-    }
-
-    /// <summary>
-    /// 控制玩家方向
-    /// 键盘上的方向键
-    /// </summary>
-    private void SetDirectionKeyControlPlayerDirection()
-    {
-        //检测四个斜向的按键
-        if (Input.GetKeyDown(KeyCode.UpArrow) && Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            SetPlayerZRotation(-45);
-            view.SetPlayerDirection(PlayerDirectionEnum.UP);
-        }
-        else if (Input.GetKeyDown(KeyCode.UpArrow) && Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            SetPlayerZRotation(45);
-            view.SetPlayerDirection(PlayerDirectionEnum.UP);
-        }
-        else if (Input.GetKeyDown(KeyCode.DownArrow) && Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            SetPlayerZRotation(-135);
-            view.SetPlayerDirection(PlayerDirectionEnum.DOWN);
-        }
-        else if (Input.GetKeyDown(KeyCode.DownArrow) && Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            SetPlayerZRotation(135);
-            view.SetPlayerDirection(PlayerDirectionEnum.DOWN);
-        }
-        else
-        {
-            if (Input.GetKeyDown(KeyCode.UpArrow))
-            {
-                SetPlayerZRotation(0);
-                view.SetPlayerDirection(PlayerDirectionEnum.UP);
-            }
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                SetPlayerZRotation(0);
-                view.SetPlayerDirection(PlayerDirectionEnum.LEFT);
-            }
-            if (Input.GetKeyDown(KeyCode.DownArrow))
-            {
-                SetPlayerZRotation(0);
-                view.SetPlayerDirection(PlayerDirectionEnum.DOWN);
-            }
-            if (Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                SetPlayerZRotation(0);
-                view.SetPlayerDirection(PlayerDirectionEnum.RIGHT);
+                view.SetPlayerDirection(DirectionEnum.RIGHT);
             }
         }
     }
@@ -156,5 +188,13 @@ public class PlayerPresenter : PresenterBase<PlayerView, PlayerModel>
     private void SetPlayerZRotation(float value)
     {
         transform.localRotation = Quaternion.Euler(0, 0, value);
+    }
+
+    private void MonitorCanBeControled(IEventParam ie)
+    {
+        if(ie is BooleanParam)
+        {
+            canBeControled = (ie as BooleanParam).value;
+        }
     }
 }

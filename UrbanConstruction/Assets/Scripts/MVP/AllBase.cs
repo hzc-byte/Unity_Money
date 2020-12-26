@@ -21,4 +21,10 @@ public abstract class AllBase : MonoBehaviour
         OnUpdate();
     }
     protected virtual void OnUpdate() { }
+
+    private void LateUpdate()
+    {
+        OnLateUpdate();
+    }
+    protected virtual void OnLateUpdate() { }
 }

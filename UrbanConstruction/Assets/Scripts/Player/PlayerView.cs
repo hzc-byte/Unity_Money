@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum PlayerDirectionEnum
+public enum DirectionEnum
 {
+    IDLE,
     LEFT,
     RIGHT,
     UP,
@@ -31,20 +32,23 @@ public class PlayerView : ViewBase
     /// <summary>
     /// 设置玩家的方向
     /// </summary>
-    public void SetPlayerDirection(PlayerDirectionEnum pde)
+    public void SetPlayerDirection(DirectionEnum pde)
     {
         switch (pde)
         {
-            case PlayerDirectionEnum.LEFT:
+            case DirectionEnum.IDLE:
+                animator.SetInteger("direction", -1);
+                break;
+            case DirectionEnum.LEFT:
                 animator.SetInteger("direction", 1);
                 break;
-            case PlayerDirectionEnum.RIGHT:
+            case DirectionEnum.RIGHT:
                 animator.SetInteger("direction", 2);
                 break;
-            case PlayerDirectionEnum.UP:
+            case DirectionEnum.UP:
                 animator.SetInteger("direction", 3);
                 break;
-            case PlayerDirectionEnum.DOWN:
+            case DirectionEnum.DOWN:
                 animator.SetInteger("direction", 4);
                 break;
         }
