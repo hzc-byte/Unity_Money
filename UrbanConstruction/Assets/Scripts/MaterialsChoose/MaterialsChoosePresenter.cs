@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ActivatePresenter : PresenterBase<ActivateView, ActivateModel>
+public class MaterialsChoosePresenter : PresenterBase<MaterialsChooseView, MaterialsChooseModel>
 {
     protected override void OnAwake()
     {

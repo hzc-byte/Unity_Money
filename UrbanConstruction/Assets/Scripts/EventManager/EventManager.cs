@@ -18,7 +18,7 @@ public class EventManager
     {
         get
         {
-            if(null == instance)
+            if (null == instance)
             {
                 instance = new EventManager();
             }
@@ -53,7 +53,7 @@ public class EventManager
         }
         else
         {
-            Debug.LogWarning(TAG + "events dont contain this list");
+            Debug.LogWarning(TAG + "events dont contain " + ec);
         }
     }
 
@@ -67,7 +67,6 @@ public class EventManager
         {
             if (lists.Contains(me))
             {
-                Debug.LogWarning(TAG + "events contains this list");
                 return;
             }
             events[ec].Add(me);
@@ -96,12 +95,12 @@ public class EventManager
             }
             else
             {
-                Debug.LogWarning(TAG + "events dont contain this list");
+                Debug.LogWarning(TAG + "events dont contain this list " + ec);
             }
         }
         else
         {
-            Debug.LogWarning(TAG + "events dont contain this list");
+            Debug.LogWarning(TAG + "events dont contain this list " + ec);
         }
     }
 

@@ -7,7 +7,7 @@ public class PlayerModel : ModelBase
     /// <summary>
     /// 精力值
     /// </summary>
-    public float EnergyValue;
+    public float EnergyValue = 100;
 
     /// <summary>
     /// 走路的速度

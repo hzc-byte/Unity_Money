@@ -57,11 +57,8 @@ public class PlayerView : ViewBase
     /// <summary>
     /// 设置精力值图片的表现
     /// </summary>
-    public void SetEneryImageValue(IEventParam ie)
+    public void SetEneryImageValue(float value)
     {
-        if (ie is FloatParam)
-        {
-            EnergyImage.fillAmount = (ie as FloatParam).value;
-        }
+        EnergyImage.fillAmount = value;
     }
 }

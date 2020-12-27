@@ -16,6 +16,10 @@ public class PlayerPresenter : PresenterBase<PlayerView, PlayerModel>
     /// 判断是否可控制行走
     /// </summary>
     private bool canBeControled = false;
+    /// <summary>
+    /// 主角行走速度
+    /// </summary>
+    private float speed = 0.05f;
 
     protected override void OnAwake()
     {
@@ -24,20 +28,23 @@ public class PlayerPresenter : PresenterBase<PlayerView, PlayerModel>
 
     protected override void OnStart()
     {
-        EventManager.Instance.AddEvent(EventEnum.WhenPlayerConsumeEnergy, view.SetEneryImageValue);
+        EventManager.Instance.AddEvent(EventEnum.WhenPlayerConsumeEnergy, SetEnergyValue);
         EventManager.Instance.AddEvent(EventEnum.PlayerCanBeControled, MonitorCanBeControled);
+        EventManager.Instance.AddEvent(EventEnum.HouseIsBuilded, WhenHouseIsBuildedSetPlayerPosition);
     }
 
     protected void OnEnable()
     {
-        EventManager.Instance.AddEvent(EventEnum.WhenPlayerConsumeEnergy, view.SetEneryImageValue);
+        EventManager.Instance.AddEvent(EventEnum.WhenPlayerConsumeEnergy, SetEnergyValue);
         EventManager.Instance.AddEvent(EventEnum.PlayerCanBeControled, MonitorCanBeControled);
+        EventManager.Instance.AddEvent(EventEnum.HouseIsBuilded, WhenHouseIsBuildedSetPlayerPosition);
     }
 
     protected void OnDisable()
     {
-        EventManager.Instance.RemoveEvent(EventEnum.WhenPlayerConsumeEnergy, view.SetEneryImageValue);
+        EventManager.Instance.RemoveEvent(EventEnum.WhenPlayerConsumeEnergy, SetEnergyValue);
         EventManager.Instance.RemoveEvent(EventEnum.PlayerCanBeControled, MonitorCanBeControled);
+        EventManager.Instance.AddEvent(EventEnum.HouseIsBuilded, WhenHouseIsBuildedSetPlayerPosition);
     }
 
     /// <summary>
@@ -47,10 +54,10 @@ public class PlayerPresenter : PresenterBase<PlayerView, PlayerModel>
     {
         if (canBeControled)
         {
-            SetPlayerWalk();
-            MonitorKeyDownOrUp();
+            MonitorKeyDown();
             SetControlPlayerDirection();
         }
+        MonitorKeyUp();
     }
 
     /// <summary>
@@ -75,39 +82,49 @@ public class PlayerPresenter : PresenterBase<PlayerView, PlayerModel>
     /// <summary>
     /// 监控按键触发
     /// </summary>
-    private void MonitorKeyDownOrUp()
+    private void MonitorKeyDown()
     {
         if (Input.GetKeyDown(KeyCode.W))
         {
             isUp = true;
-        }
-        if (Input.GetKeyUp(KeyCode.W))
-        {
-            isUp = false;
         }
 
         if (Input.GetKeyDown(KeyCode.A))
         {
             isLeft = true;
         }
-        if (Input.GetKeyUp(KeyCode.A))
-        {
-            isLeft = false;
-        }
 
         if (Input.GetKeyDown(KeyCode.S))
         {
             isDown = true;
-        }
-        if (Input.GetKeyUp(KeyCode.S))
-        {
-            isDown = false;
         }
 
         if (Input.GetKeyDown(KeyCode.D))
         {
             isRight = true;
         }
+    }
+
+    /// <summary>
+    /// 监控按键触发
+    /// </summary>
+    private void MonitorKeyUp()
+    {
+        if (Input.GetKeyUp(KeyCode.W))
+        {
+            isUp = false;
+        }
+
+        if (Input.GetKeyUp(KeyCode.A))
+        {
+            isLeft = false;
+        }
+
+        if (Input.GetKeyUp(KeyCode.S))
+        {
+            isDown = false;
+        }
+
         if (Input.GetKeyUp(KeyCode.D))
         {
             isRight = false;
@@ -135,49 +152,29 @@ public class PlayerPresenter : PresenterBase<PlayerView, PlayerModel>
             view.SetPlayerDirection(DirectionEnum.IDLE);
             return;
         }
-        //检测四个斜向的按键
-        if (isUp && isLeft)
+        if (isUp)
         {
-            SetPlayerZRotation(45);
+            SetPlayerZRotation(0);
             view.SetPlayerDirection(DirectionEnum.UP);
+            this.transform.Translate(Vector3.up * speed);
         }
-        else if (isUp && isRight)
+        if (isLeft)
         {
-            SetPlayerZRotation(-45);
-            view.SetPlayerDirection(DirectionEnum.UP);
+            SetPlayerZRotation(0);
+            view.SetPlayerDirection(DirectionEnum.LEFT);
+            this.transform.Translate(Vector3.left * speed);
         }
-        else if (isDown && isLeft)
+        if (isDown)
         {
-            SetPlayerZRotation(-45);
+            SetPlayerZRotation(0);
             view.SetPlayerDirection(DirectionEnum.DOWN);
+            this.transform.Translate(Vector3.down * speed);
         }
-        else if (isDown && isRight)
+        if (isRight)
         {
-            SetPlayerZRotation(45);
-            view.SetPlayerDirection(DirectionEnum.DOWN);
-        }
-        else
-        {
-            if (isUp)
-            {
-                SetPlayerZRotation(0);
-                view.SetPlayerDirection(DirectionEnum.UP);
-            }
-            if (isLeft)
-            {
-                SetPlayerZRotation(0);
-                view.SetPlayerDirection(DirectionEnum.LEFT);
-            }
-            if (isDown)
-            {
-                SetPlayerZRotation(0);
-                view.SetPlayerDirection(DirectionEnum.DOWN);
-            }
-            if (isRight)
-            {
-                SetPlayerZRotation(0);
-                view.SetPlayerDirection(DirectionEnum.RIGHT);
-            }
+            SetPlayerZRotation(0);
+            view.SetPlayerDirection(DirectionEnum.RIGHT);
+            this.transform.Translate(Vector3.right * speed);
         }
     }
 
@@ -190,11 +187,46 @@ public class PlayerPresenter : PresenterBase<PlayerView, PlayerModel>
         transform.localRotation = Quaternion.Euler(0, 0, value);
     }
 
+    /// <summary>
+    /// 检测玩家是否能够被控制
+    /// </summary>
+    /// <param name="ie"></param>
     private void MonitorCanBeControled(IEventParam ie)
     {
-        if(ie is BooleanParam)
+        if (ie is BooleanParam)
         {
             canBeControled = (ie as BooleanParam).value;
         }
+    }
+
+    private void SetEnergyValue(IEventParam ie)
+    {
+        if (ie is FloatParam)
+        {
+            model.EnergyValue = model.EnergyValue - (ie as FloatParam).value;
+            Debug.Log("Energy = " + model.EnergyValue);
+            if (model.EnergyValue <= 0)
+            {
+                model.EnergyValue = 0;
+                if (!UIView.hasHouse)
+                {
+                    EventManager.Instance.DispatchEvent(EventEnum.GameFailure, null);
+                }
+            }
+            else if (model.EnergyValue >= 100)
+            {
+                model.EnergyValue = 100;
+            }
+            view.SetEneryImageValue(model.EnergyValue * 0.01f);
+        }
+    }
+    /// <summary>
+    /// 当房子建好之后玩家的位置
+    /// </summary>
+    /// <param name="ie"></param>
+    private void WhenHouseIsBuildedSetPlayerPosition(IEventParam ie)
+    {
+        transform.position = new Vector3(0.76f, -5.05f, 0);
+        view.SetPlayerDirection(DirectionEnum.DOWN);
     }
 }
