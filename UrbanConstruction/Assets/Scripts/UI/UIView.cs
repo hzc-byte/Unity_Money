@@ -277,7 +277,7 @@ public class UIView : ViewBase
                 AllUIElementInBackpackPanel(false);
                 AllUIElementInMainPanel(true);
                 EventManager.Instance.DispatchEvent(EventEnum.HouseIsBuilded, null);
-                StartCoroutine(EndText.Print("恭喜你房屋建造成功！！！", 0.1f, delegate
+                StartCoroutine(EndText.Print("Congratulations! You built the shelter successfully! Have a good rest! ", 0.1f, delegate
                 {
                     EndBlackBG.DOFade(0, 1f).OnComplete(delegate
                     {
@@ -474,7 +474,7 @@ public class UIView : ViewBase
         EndBlackBG.gameObject.SetActive(true);
         EndBlackBG.DOFade(1, 0.5f).OnComplete(delegate
         {
-            StartCoroutine(EndText.Print("很遗憾，由于房屋没有建造，目前您的精力值空了，游戏失败！！！", 0.1f, delegate
+            StartCoroutine(EndText.Print("Sorry, you did not build the shelter successfully before you run out of your energy. Please try again.", 0.1f, delegate
             {
 
             }));
